@@ -124,7 +124,7 @@ class Graph:
         while q.size() > 0:
             # dequeue the first PATH\
             p = q.dequeue()
-            # print("p", p)
+            print("p", p)
             # grab the last vertex from the PATH
             v = p[-1]
             # print("v", v)
@@ -143,13 +143,14 @@ class Graph:
                 for neighbor in self.vertices[v]:
                     # new_path.append(neighbor)
                 # q.enqueue(new_path)
-                    # print("type(neighbor)", type(neighbor))
+                    print("neighbor", neighbor)
                     # COPY THE PATH
                     # APPEND THE NEIGHBOR TO THE BACK
-                    new_path = p
+                    new_path = list(p)
                     # print("new_path", new_path)
                     new_path.append(neighbor)
                     q.enqueue(new_path)
+                print("q.queue", q.queue)
         print("------")
 
         ###########################
