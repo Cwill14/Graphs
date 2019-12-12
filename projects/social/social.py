@@ -87,24 +87,20 @@ class SocialGraph:
         q.enqueue([user_id])
         while q.size() > 0:
             p = q.dequeue()
-            # print("p", p)
             v = p[-1]
-            # print("v", v)
             if v not in visited:
                 visited[v] = p
             for i in self.friendships[v]:
-                # print("i", i)
+                # to prevent infinite loop:
                 if i not in visited:
                     new_path = list(p)
                     new_path.append(i)
                     q.enqueue(new_path)
 
-        # # return visited
         answer = {}
         for key in sorted(visited.keys()):
             answer[key] = visited[key]
         return answer
-        # return sorted(visited.keys())
 
 
 
