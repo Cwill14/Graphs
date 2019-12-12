@@ -19,14 +19,18 @@ class Graph:
         """
         Add a directed edge to the graph.
         """
-        if v1 not in self.vertices and v2 not in self.vertices:
-            raise IndexError("v1 and v2 vertices do not exist")
-        elif v1 in self.vertices and v2 not in self.vertices:
-            raise IndexError("v2 vertex does not exist.")
-        elif v2 in self.vertices and v1 not in self.vertices:
-            raise IndexError("v1 vertex does not exist")
-        else:
+        # if v1 not in self.vertices and v2 not in self.vertices:
+        #     raise IndexError("v1 and v2 vertices do not exist")
+        # elif v1 in self.vertices and v2 not in self.vertices:
+        #     raise IndexError("v2 vertex does not exist.")
+        # elif v2 in self.vertices and v1 not in self.vertices:
+        #     raise IndexError("v1 vertex does not exist")
+        # else:
+        #     self.vertices[v1].add(v2)
+        if v1 in self.vertices and v2 in self.vertices:
             self.vertices[v1].add(v2)
+        else:
+            raise IndexError("That vertex does not exist!")
             
 
     def get_neighbors(self, vertex_id):
