@@ -40,34 +40,66 @@ own_graph = {
 ##########################
 ### DFT to explore graph and log direction
 # write algorithm that picks random unexplored direectiion from player's current room
+num = 0
 def dft():
     # print("player.currentRoom.id = ", player.currentRoom.id)
     # print("player.currentRoom.getExits() = ", player.currentRoom.getExits())
+    global num
     prev_room = player.currentRoom.id
     prev_exits = player.currentRoom.getExits()
-    
-    # pick random direction
-    direction = random.choice(player.currentRoom.getExits())
-    print("direction = ", direction)
 
-    # algo then travels and logs "that" direction, and loops
-    player.travel(direction)
-    print("player.currentRoom.id = ", player.currentRoom.id)
-    print("player.currentRoom.getExits() = ", player.currentRoom.getExits())
-        
-    own_graph[player.currentRoom.id] = {}
-    for x in player.currentRoom.getExits():
-        if x is not '?':
-            if x != direction:
-                own_graph[player.currentRoom.id][x] = prev_room
-            else:
-                own_graph[player.currentRoom.id][x] = '?'
-    for x in prev_exits:
-        if x == direction:
-            own_graph[prev_room][x] = player.currentRoom.id
+    def get_opp(direction):
+        if direction == 'n':
+            return 's'
+        if direction == 'e':
+            return 'w'
+        if direction == 's':
+            return 'n'
+        if direction == 'w':
+            return 'e'
 
+    while num < 8:
+        # pick random direction
+        print("before travel: player.currentRoom.id = ", player.currentRoom.id)
+        print("before travel: player.currentRoom.getExits() = ", player.currentRoom.getExits())
+        direction = random.choice(player.currentRoom.getExits())
+        print("direction = ", direction)
 
-    # when reach dead-end(room with no unexplored paths), walk back to nearest room with unexplored path
+        # algo then travels and logs "that" direction, and loops
+        # when reach dead-end(room with no unexplored paths), walk back to nearest room with unexplored path
+        player.travel(direction)
+        print("after travel: player.currentRoom.id = ", player.currentRoom.id)
+        print("after travel: player.currentRoom.getExits() = ", player.currentRoom.getExits())       
+
+        if player.currentRoom.id in own_graph:
+            for x in player.currentRoom.getExits():
+                if get_opp(direction) == x: 
+                    own_graph[player.currentRoom.id][x] = prev_room
+
+        else:
+            own_graph[player.currentRoom.id] = {}
+            for x in player.currentRoom.getExits():
+                if get_opp(direction) == x: 
+                    own_graph[player.currentRoom.id][x] = prev_room
+                else:
+                    own_graph[player.currentRoom.id][x] = '?'
+        # for x in player.currentRoom.getExits():
+        #     if player.currentRoom.id in own_graph:
+        #         if get_opp(direction) == x: 
+        #             own_graph[player.currentRoom.id][x] = prev_room
+        #     else:
+        #         own_graph[player.currentRoom.id] = {}
+        #         if get_opp(direction) != x:
+        #             own_graph[player.currentRoom.id][x] = '?'
+        #         else:
+        #             own_graph[player.currentRoom.id][x] = prev_room
+
+        for x in prev_exits:
+            if x == direction:
+                own_graph[prev_room][x] = player.currentRoom.id
+        num += 1
+        dft()
+
 
 ###########################
 ### BFS to find room with unexplored exit
