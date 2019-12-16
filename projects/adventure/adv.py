@@ -7,6 +7,10 @@ import random
 import time
 import sys
 
+# print("sys.getrecursionlimit() = ", sys.getrecursionlimit())
+# sys.setrecursionlimit(5000)
+# print("sys.getrecursionlimit() = ", sys.getrecursionlimit())
+
 # Load world
 world = World()
 
@@ -26,136 +30,87 @@ player = Player("Name", world.startingRoom)
 
 # Fill this out
 traversalPath = []
-##########################
-### construct own graph
-        
 own_graph = {
     0: {'n': '?', 's': '?', 'e': '?', 'w': '?'}
 }
-# num_steps = 0
+backpath = []
+
+# ATTEMPT 2
+def get_opp(direction):
+    if direction == 'n':
+        return 's'
+    if direction == 'e':
+        return 'w'
+    if direction == 's':
+        return 'n'
+    if direction == 'w':
+        return 'e'
+
+def log_path(direction, prev_room, prev_exits):
+    # if room already in own graph, assign exit just used, leave everything else alone
+    if player.currentRoom.id in own_graph:
+        for x in player.currentRoom.getExits():
+            if get_opp(direction) == x: 
+                own_graph[player.currentRoom.id][x] = prev_room
+
+    # otherwise, create room, assign exit just used, fill other exits with '?'
+    else:
+        own_graph[player.currentRoom.id] = {}
+        for x in player.currentRoom.getExits():
+            if get_opp(direction) == x: 
+                own_graph[player.currentRoom.id][x] = prev_room
+            else:
+                own_graph[player.currentRoom.id][x] = '?'
+
+    # assign exit just used to previous room
+    for x in prev_exits:
+        if x == direction:
+            own_graph[prev_room][x] = player.currentRoom.id
+
+
+def get_unexplored(unexplored):
+    # if any exits in current room == '?', add to unexplored list
+    for x in player.currentRoom.getExits():
+        if own_graph[player.currentRoom.id][x] == '?':
+            unexplored.append(x)
+
+def travel(direction):
+    player.travel(direction)
+    traversalPath.append(direction)
 
 def dft():
-    # global num_steps
-    prev_room = player.currentRoom.id
-    prev_exits = player.currentRoom.getExits()
 
-    def get_opp(direction):
-        if direction == 'n':
-            return 's'
-        if direction == 'e':
-            return 'w'
-        if direction == 's':
-            return 'n'
-        if direction == 'w':
-            return 'e'
-
-    while len(own_graph) < len(roomGraph):
-        # when reach dead-end(room with no unexplored paths), walk back to nearest room with unexplored path
+    while len(own_graph) < len(roomGraph):  
+        prev_room = player.currentRoom.id
+        prev_exits = player.currentRoom.getExits()
+        # loop through current room exits, if exit == '?', then add to unexplored list
         unexplored = []
-        explored = []
-        for x in player.currentRoom.getExits():
-            if own_graph[player.currentRoom.id][x] == '?':
-                unexplored.append(x)
-            else:
-                explored.append(x)
-            # print("x", x)
-            # if x == '?'
-        # print("unexplored = ", unexplored)
+        get_unexplored(unexplored)
 
+        # choose random direction from unexplored
         if len(unexplored) > 0:
             direction = random.choice(unexplored)
-        else:
-            # go back, maybe search for nearest room with unexplored, take that path, and set those as directions
-            # print("bfs(player.currentRoom.id) = ", bfs(player.currentRoom.id))
-            # path = bfs(player.currentRoom.id)
-            # print("playplayer.currentRoom.id = ",player.currentRoom.id)
-            # print("playplayer.currentRoom.getExits() = ",player.currentRoom.getExits())
-            # print("path = ", path)
-            direction = random.choice(explored)
+            travel(direction)
+            backpath.append(get_opp(direction))  
+        else: 
+            # if dead-end reached
+            while len(unexplored) == 0:
+                direction = backpath.pop()
+                travel(direction)
+                get_unexplored(unexplored)
 
-        player.travel(direction)
-        # num_steps += 1
-        traversalPath.append(direction)     
+        #### after traveling, log
+        log_path(direction, prev_room, prev_exits)
 
-        if player.currentRoom.id in own_graph:
-            # if all exits are explored, go back to prev room.
-            # eventually this will maybe call a bfs to the nearest unexplored room?
-            for x in player.currentRoom.getExits():
-                if get_opp(direction) == x: 
-                    own_graph[player.currentRoom.id][x] = prev_room
-
-        else:
-            own_graph[player.currentRoom.id] = {}
-            for x in player.currentRoom.getExits():
-                if get_opp(direction) == x: 
-                    own_graph[player.currentRoom.id][x] = prev_room
-                else:
-                    own_graph[player.currentRoom.id][x] = '?'
-
-        for x in prev_exits:
-            if x == direction:
-                own_graph[prev_room][x] = player.currentRoom.id
-        dft()
-
-    # result = {}
-    # for k in sorted(own_graph.keys()):
-    #     result[k] = own_graph[k]
-    # own_graph = result
-
-
-###########################
-### BFS to find room with unexplored exit
-# search for exit with '?' as value.
-# if exit has been explored, " you can put it in BFS queue like normal"
-# BFS will return path as list of room IDs. Need to convert to list of n/s/e/w directions before add to traversal path
-
-def bfs(room_id):
-    q = Queue()
-    q.enqueue([room_id])
-    visited = set()
-    while q.size() > 0:
-        path = q.dequeue()
-        # print("p = ", p)
-        v = path[-1]
-        # print("v = ", v)
-        if v not in visited:
-        # loop through exits in room with ID 'v' in own graph
-            for x in own_graph[v]:
-                # if exit value is '?'
-                if own_graph[v][x] == '?':
-                    return path
-            visited.add(v)
-
-            # not sure where to go after here,
-            # ignore code lol
-
-            # loop through exits in current room
-            for x in player.currentRoom.getExits():
-                i = player.currentRoom.getRoomInDirection(x)
-                print("i = ", i)
-                new_path = list(path)
-                new_path.append(i.id)
-                q.enqueue(new_path) 
-    # q = Queue()
-    # q.enqueue([room_id])
-    # visited = set()
-    # while q.size() > 0:
-    #     p = q.dequeue()
-    #     print("p = ", p)
-    #     v = p[-1]
-    #     print("v = ", v)
-    #     if v not in visited:
-    #         # search for exit with '?' as value
-    #         # if v == roomd id where exit value is
-    #             return p
-    #         visited.add(v)
-    #         # for neighbor in self.get_neighbors(v):
-    #         #     new_path = list(p)
-    #         #     new_path.append(neighbor)
-    #         #     q.enqueue(new_path)
-
-                
-
+start = time.time()
+dft()
+end = time.time()
+print("own_graph = ", own_graph)
+print("traversalPath = ", traversalPath)
+print("len(own_graph) = ", len(own_graph))
+print("len(roomGraph) = ", len(roomGraph))
+print("length of traversal path (number of steps): ", len(traversalPath))
+print("Time: ", end - start)
 
 # TRAVERSAL TEST
 visited_rooms = set()
@@ -172,18 +127,9 @@ else:
     print("TESTS FAILED: INCOMPLETE TRAVERSAL")
     print(f"{len(roomGraph) - len(visited_rooms)} unvisited rooms")
 
-print("sys.getrecursionlimit() = ", sys.getrecursionlimit())
-sys.setrecursionlimit(1500)
 
-start = time.time()
-dft()
-end = time.time()
-print("own_graph = ", own_graph)
-print("traversalPath = ", traversalPath)
-print("len(own_graph) = ", len(own_graph))
-print("len(roomGraph) = ", len(roomGraph))
-print("length of traversal path (number of steps): ", len(traversalPath))
-print("Time: ", end - start)
+
+
 #######
 # UNCOMMENT TO WALK AROUND
 #######
